@@ -1,300 +1,360 @@
 // Initialize your app
 var myApp = new Framework7({
-	template7Pages: true,
+    // animateNavBackIcon:true,//ios only
+    swipePanel: 'left',
+	// pushstate: true, // for h/w back button support MAYBE! KOSTYL
+	swipePanelActiveArea: 50,
 	material: true, //enable Material theme
-	modalTitle: 'MoiGorod',
-	pushstate: true,
+	allowDuplicateUrls: true, // allow loading of new pages that have same url as currently "active" page in View
+	modalTitle: '27 билетов',
 	modalButtonOk: 'Да',
 	modalButtonCancel: 'Нет',
-	// allowDuplicateUrls: true, // allow loading of new pages that have same url as currently "active" page in View
+	
+	
 });
 	
 // Export selectors engine
 var $$ = Dom7;
-// var jsonURL = 'http://scr.ru/mg/www/php/json680000.txt';
-var jsonURL = 'http://27podarkov.ru/mg/json680000.txt';
 
-// Ajax setting for timeout
+// Ajax timeout
 $$.ajaxSetup({
-	cache: false,
 	crossDomain: true, // don't know if it's working for CORS properly, on localhost - CORS failed during ajax form submit, regular submit ok
-	timeout: 9000, // 9 seconds, same as timeout in  ptrContent.on setTimeout
-	error: function(xhr) {
-	myApp.hideProgressbar();
-	var status = xhr.status;
-	myApp.alert( "Проверьте подключение к Интернету" , 'Ошибка сети', function () {
-		$$(".back").click();
-		});
-	}
+   timeout: 9000, // 5 seconds
+   error: function(xhr) {
+		myApp.hideProgressbar();
+		 var status = xhr.status;
+		 myApp.alert( "Проверьте подключение к Интернету" , 'Ошибка сети', function () {
+			$$(".back").click();
+			});
+		 
+		}
 });
 
-// Back Button! Call onDeviceReady when PhoneGap is loaded. At this point, the document has loaded but phonegap-1.0.0.js has not. When PhoneGap is loaded and talking with the native device, it will call the event deviceready.
+
+// Templates using Template7 template engine
+// myApp.homeTemplate = Template7.compile($$('#home-page').html()); // home page loads by default and looks like static
+myApp.categoryTemplate = Template7.compile($$('#category-page').html());
+myApp.postTemplate = Template7.compile($$('#post-page').html());
+
+
+// Add main View
+var mainView = myApp.addView('.view-main', {
+    // domCache: true// Enable Dom Cache so we can use all inline pages
+});
+
+
+// Call onDeviceReady when PhoneGap is loaded.
+// At this point, the document has loaded but phonegap-1.0.0.js has not.
+// When PhoneGap is loaded and talking with the native device,
+// it will call the event deviceready.
 document.addEventListener("deviceready", onDeviceReady, false);
+
 function onDeviceReady() { // PhoneGap is loaded and it is now safe to make calls PhoneGap methods
 	document.addEventListener("backbutton", onBackKeyDown, false); // Register the event listener backButton
-	initPushwoosh();
 }
+
 function onBackKeyDown() { // Handle the back button
 	if(mainView.activePage.name == "home"){ navigator.app.exitApp(); }
 	else { mainView.router.back(); }
 }
 
-document.addEventListener('push-notification', function(event) {
-    var title = event.notification.title;//event.notification is a JSON push notifications payload
-    var userData = event.notification.userdata;//example of obtaining custom data from push notification
-    // console.warn('user data: ' + JSON.stringify(userData));
-    // alert(title);//we might want to display an alert with push notifications title
-    // alert(userData);//we might want to display an alert with push notifications title
+
+// alert code 1st home  ====================================
+$$('.alert-text-title').on('click', function () {
+    myApp.alert(mainView.activePage.name, 'Home!');
 });
 
-
-
-// Select, Compile and render template
-myApp.compiledNewsTemplate = Template7.compile(homeTemplate = $$('#news-template').html());// Select, Compile and render
-// myApp.compiledSaleTemplate = Template7.compile(homeTemplate = $$('#sale-template').html());// Select, Compile and render
-myApp.compiledCinemaTemplate = Template7.compile(homeTemplate = $$('#cinema-template').html());// Select, Compile and render
-myApp.compiledEventsTemplate = Template7.compile(homeTemplate = $$('#events-template').html());// Select, Compile and render
-myApp.compiledCurrencyTemplate = Template7.compile(homeTemplate = $$('#currency-template').html());// Select, Compile and render
-
-// Add main View
-var mainView = myApp.addView('.view-main', {
-});
-
-
-myApp.buildHomeHTML = function () {
-	$$.getJSON(jsonURL, function (json) {
-		Template7.data = json;
-		// $$('.news-list ul').html(''); // Insert blank data into page
-		
-		// Insert data into template
-		var newsHtml = myApp.compiledNewsTemplate(json);
-		// var saleHtml = myApp.compiledSaleTemplate(json);
-		var cinemaHtml = myApp.compiledCinemaTemplate(json);
-		var eventsHtml = myApp.compiledEventsTemplate(json);
-		var currencyHtml = myApp.compiledCurrencyTemplate(json);
-
-		// Insert HTML data into page
-		$$('.news-list ul').html(newsHtml);
-		// $$('.sale-list ul').html(saleHtml);
-		$$('.cinema-list ul').html(cinemaHtml);
-		$$('.events-list ul').html(eventsHtml);
-		$$('.currency-list ul').html(currencyHtml);
-		
-	});
-	myApp.pullToRefreshDone();// When loading done, we need to reset it
-};
-
-
-// Pull to refresh content
-var ptrContent = $$('.pull-to-refresh-content');
-ptrContent.on('refresh', function (e) { // Add 'refresh' listener on it
-	// myApp.alert('buildHomeHTML', 'Home!');
-	setTimeout(function () {
-		// console.log('buildHomeHTML');
-		myApp.buildHomeHTML();
-        myApp.pullToRefreshDone();
-    // }, 1000);
-    });
-});
-
-
-myApp.buildHomeHTML(); // Load content on startup
-// navigator.splashscreen.hide(); // Phonegap splashscreen plugin hide picture
-
-myApp.onPageInit('sendnews',function(page){
-	document.getElementById("imageurl").value = null; // erasing any saved value due to autosave form
-	// myApp.alert(document.getElementById("imageurl").value,'imageurl');
-	// myApp.alert('imageurl');
-});
-
-/* 
-myApp.onPageInit('about',function(page){
-	// myApp.alert(document.getElementById("imageurl").value,'imageurl');
-	// document.getElementById("imageurl").value = ''; // erasing any saved value due to autosave form
-	myApp.alert('about');
+/* $$('.demo-progressbar-infinite-multi-overlay .button').on('click', function () {
+    var container = $$('body');
+    if (container.children('.progressbar, .progressbar-infinite').length) return; //don't run all this if there is a current progressbar loading
+    myApp.showProgressbar(container, 'multi');
+    setTimeout(function () {
+        myApp.hideProgressbar();
+    }, 5000);
 }); */
 
-/**  * Take picture with camera  */
-function takePicture() {
-	navigator.camera.getPicture(
-		function(uri) {
-			var img = document.getElementById('camera_image');
-			img.style.visibility = "visible";
-			img.style.display = "block";
-			img.src = uri;
-			// document.getElementById('camera_status').innerHTML = "Success";
-		},
-		function(e) {
-			myApp.alert('Не удалось сделать фото<br />Попробуйте снова, пожалуйста.' + e);
-			// console.log("Error getting picture: " + e);
-			// document.getElementById('camera_status').innerHTML = "Error getting picture.";
-		},
-		{ quality: 50, destinationType: navigator.camera.DestinationType.FILE_URI});
-};
 
 
 
-/**  * BEST Select picture from album  */
-function selectPicture() {
+
+
+
+// Click event 1st home on link to Category List Page
+$$('.load-dynamic-page-category').on('click', function(){
+	var catid = $$(this).attr('data-catid');
+	var categoryUrl = 'http://27biletov.ru/wp-json/wp/v2/posts?filter[cat]='+catid;
+	console.log( "catid:" + catid + "; carURL: " + categoryUrl);
 	
-	navigator.camera.getPicture(
-		function(uri) {
-			if (uri.substring(0,21)=="content://com.android") {
-				photo_split=uri.split("%3A");
-				uri="content://media/external/images/media/"+photo_split[1];
+	var container = $$('body');
+    if (container.children('.progressbar, .progressbar-infinite').length) return; //don't run all this if there is a current progressbar loading
+    myApp.showProgressbar(container, 'multi');
+	
+	$$.getJSON(categoryUrl, function (json) {
+	console.log( json );
+	var pageContent = myApp.categoryTemplate(json);
+	
+	myApp.hideProgressbar();
+	
+	mainView.loadContent(pageContent);
+	});
+});
+
+// Click event on link to Post Page 
+$$('.load-dynamic-page-post').on('click', function(){
+	var postid = $$(this).attr('data-postid');
+	var postUrl = 'http://27biletov.ru/wp-json/wp/v2/posts/'+postid;
+	console.log( "postid:" + postid + "; postURL: " + postUrl);
+	
+	var container = $$('body');
+    if (container.children('.progressbar, .progressbar-infinite').length) return; //don't run all this if there is a current progressbar loading
+    myApp.showProgressbar(container, 'multi');
+	
+	// $$.getJSON(postUrl, function (json) {
+	// console.log( json );
+	// var pageContent = myApp.postTemplate(json);
+	
+	
+	$$.getJSON(postUrl, function (json) {
+	var stringified = JSON.stringify(json).replace( /<div role=\\\"form\\\"[\s\S]*wpcf7-display-none\\\"><\/div><\/form><\/div>/gm, "" );
+	var noform = JSON.parse(stringified);
+	var pageContent = myApp.postTemplate(noform);
+	
+	myApp.hideProgressbar();
+	
+	mainView.loadContent(pageContent);
+	});
+});
+
+
+// Initializing Home Page ====================================
+myApp.onPageInit('home',function(page){
+	$$(page.container).on('click','.alert-text-title',function(){
+		myApp.alert(mainView.activePage.name, 'Home!');
+	});
+	
+	
+	
+	// Click event 1st home on link to Category List Page
+	$$('.load-dynamic-page-category').on('click', function(){
+		var catid = $$(this).attr('data-catid');
+		var categoryUrl = 'http://27biletov.ru/wp-json/wp/v2/posts?filter[cat]='+catid;
+		console.log( "catid:" + catid + "; carURL: " + categoryUrl);
+		
+		var container = $$('body');
+		if (container.children('.progressbar, .progressbar-infinite').length) return; //don't run all this if there is a current progressbar loading
+		myApp.showProgressbar(container, 'multi');
+		
+		$$.getJSON(categoryUrl, function (json) {
+		console.log( json );
+		var pageContent = myApp.categoryTemplate(json);
+		
+		myApp.hideProgressbar();
+		
+		mainView.loadContent(pageContent);
+		});
+	});
+
+
+	// Click event on link to Post Page 
+	$$('.load-dynamic-page-post').on('click', function(){
+		var postid = $$(this).attr('data-postid');
+		var postUrl = 'http://27biletov.ru/wp-json/wp/v2/posts/'+postid;
+		console.log( "postid:" + postid + "; postURL: " + postUrl);
+		
+		var container = $$('body');
+		if (container.children('.progressbar, .progressbar-infinite').length) return; //don't run all this if there is a current progressbar loading
+		myApp.showProgressbar(container, 'multi');
+		
+		// removing contact form 7 code from content
+		$$.getJSON(postUrl, function (json) {
+		var stringified = JSON.stringify(json).replace( /<div role=\\\"form\\\"[\s\S]*wpcf7-display-none\\\"><\/div><\/form><\/div>/gm, "" );
+		var noform = JSON.parse(stringified);
+		var pageContent = myApp.postTemplate(noform);
+		
+		myApp.hideProgressbar();
+		
+		mainView.loadContent(pageContent);
+		});
+	});
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Initializing Category Page ====================================
+myApp.onPageInit('category',function(page){
+	$$(page.container).on('click','.alert-text-title',function(){
+		myApp.alert(mainView.activePage.name, 'Category!');
+	});
+	
+	
+	// Click event on link to Post Page 
+	$$('.load-dynamic-page-post').on('click', function(){
+		var postid = $$(this).attr('data-postid');
+		var postUrl = 'http://27biletov.ru/wp-json/wp/v2/posts/'+postid;
+		console.log( "postid:" + postid + "; postURL: " + postUrl);
+		
+		var container = $$('body');
+		if (container.children('.progressbar, .progressbar-infinite').length) return; //don't run all this if there is a current progressbar loading
+		myApp.showProgressbar(container, 'multi');
+		
+	$$.getJSON(postUrl, function (json) {
+	var stringified = JSON.stringify(json).replace( /<div role=\\\"form\\\"[\s\S]*wpcf7-display-none\\\"><\/div><\/form><\/div>/gm, "" );
+	var noform = JSON.parse(stringified);
+	var pageContent = myApp.postTemplate(noform);
+		
+		myApp.hideProgressbar();
+		
+		mainView.loadContent(pageContent);
+		});
+	});
+	
+});
+
+
+
+
+
+
+// Initializing Post Page ====================================
+myApp.onPageInit('post',function(page){
+	// console.log( $$(page));
+	// console.log( page);
+	
+	$$(page.container).on('click','.alert-text-title',function(){
+		myApp.alert(mainView.activePage.name, 'Post!');
+	});
+	
+/* 	window.onscroll = function(ev) {
+		if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
+			// you're at the bottom of the page
+			alert("you're at the bottom of the page");
+		}
+	}; */
+});
+
+
+
+
+// Initializing Buyform Page ====================================
+myApp.onPageInit('buyform',function(page){
+	var linkurl = page.query.linkurl;
+	var linktitle = page.query.linktitle;
+	document.getElementById("inputurl").value = linkurl;
+	document.getElementById("inputtitle").value = linktitle;
+	console.log( 'linkurl: ' + linkurl);
+	console.log( 'linktitle: ' + linktitle);
+	
+	
+// initial settings for toggle and submit button
+$$('div.rowsubmit').show();
+$$('input[type="checkbox"]').prop('checked', true);
+// $$('input.name').focus(); // don't work
+// document.getElementById("name").focus(); // input gets focus, but soft keyboard don't open
+
+/* // this whole thing didn't work, only detects keyCode = 13. Project suspended
+// http://stackoverflow.com/questions/23887544/how-to-trigger-a-tab-when-user-presses-enter
+$$('input[type="text"]').on("keydown",function(event){
+   if (event.keyCode == 9) {
+	   // myApp.alert('keyCode == 9! you got tab i.e "NEXT" Btn.');
+	   //you got tab i.e "NEXT" Btn
+   }
+   if (event.keyCode == 13) {
+	   //you got enter i.e "GO" Btn
+	   myApp.alert('keyCode == 13! you got enter i.e "GO" Btn.');
+			var inputs = $(this).parents("form").eq(0).find(":input:visible:not(:disabled):not([readonly])");
+			var idx = inputs.index(this);
+			if (idx == inputs.length - 1) {
+				idx = -1;
+			} else {
+				inputs[idx + 1].focus(); // handles submit buttons
 			}
-			// myApp.alert('url SAVEDPHOTOALBUM:<br />' + uri);
-			var img = document.getElementById('camera_image');
-			img.style.visibility = "visible";
-			img.style.display = "block";
-			img.src = uri;
-			// document.getElementById('camera_status').innerHTML = "Success";
+			try {
+				inputs[idx + 1].select();
+			}
+			catch (err) {
+				// handle objects not offering select
+			}
+   } 
 
-		},
-		function(e) {
-			// console.log("Error getting picture: " + e);
-			// document.getElementById('camera_status').innerHTML = "Error getting picture.";
-			myApp.alert('Не удалось сделать фото<br />Попробуйте снова, пожалуйста.<br />' + e);
-		},
-		{ quality: 50, destinationType: navigator.camera.DestinationType.FILE_URI, sourceType: navigator.camera.PictureSourceType.SAVEDPHOTOALBUM});
-};
+});*/
 
 
-
-
-
-/**  * Upload current picture  */
-function uploadPicture() {
-	
-	// Get URI of picture to upload
-	var img = document.getElementById('camera_image');
-	var imageURI = img.src;
-	var newstext = document.getElementById('newstext').value;
-	
-	if (!newstext) {
-		myApp.alert('Пожалуйста, введите текст новости.','Ошибка!');
-		// document.getElementById('camera_status').innerHTML = "Take picture or select picture from library first.";
-		return;
+// onchange event processing
+$$('input[type="checkbox"]').on('keyup keydown change', function (e) { 
+	var isChecked = $$('input[type="checkbox"]').prop('checked');
+	if(isChecked) {
+		$$('div.rowsubmit').show();
 	}
-	
-	// Check if photo is made, if text news only is allowed, skip this check
-	if (!imageURI || (img.style.display == "none")) {
-		// if (uri.substring(0,21)=="content://com.android") {
-				// photo_split=uri.split("%3A");
-				// uri="content://media/external/images/media/"+photo_split[1];
-			// }
+	else {
+		$$('div.rowsubmit').hide();
+	}
+	});
+				
+	//=====================================================================================================================================================			
+	//=====================================================================================================================================================			
+	//=====================================================================================================================================================	
+	/* 
+	// 1st variant
+	//confirm dialog on buyform page
+	$$('.confirm-title-ok-cancel').on('click', function () {
 		var idName = document.getElementById('name').value;
-		myApp.confirm(idName, 'Вы не добавили изображение.<br />Хотите сделать или выбрать фото?', 
-			function () {
-				return;
+		var idTel = document.getElementById('tel').value;
+		myApp.confirm(idTel, idName + ',<br />Вы правильно ввели телефон?', 
+			function () {	
+			//stackoverflow solution: var form = document.getElementById("form-id"); document.getElementById("your-id").addEventListener("click", function () { form.submit(); });  
+				document.getElementById("buyformid").submit();
+				
 			},
 			function () {
-				$$('form.ajax-submit').trigger('submit'); 
-				myApp.alert('Сообщение отправлено!<br />Благодарим Вас!','Спасибо!');
-				document.getElementById("imageurl").value = null;
-				return;
+				myApp.alert('Введите правильный номер телефона, пожалуйста.');
 			}
 		);
-		return;
-	}
-	
-	
-	
-	// Verify server has been entered
-	// server = document.getElementById('serverUrl').value;
-	var server = 'http://27podarkov.ru/mg/upload.php';
-	if (server) {
-		
-		// Specify transfer options
-		var options = new FileUploadOptions();
-		options.fileKey="file";
-		options.fileName = (new Date).getTime()+".jpg";
-		options.mimeType="image/jpeg";
-		options.chunkedMode = false;
+	});   
+	 */			
+				
+	//=====================================================================================================================================================			
+	//=====================================================================================================================================================			
+	//=====================================================================================================================================================	
 
-		// Transfer picture to server
-		myApp.showPreloader('Отправляю сообщение');
-		var ft = new FileTransfer();
-		ft.upload(imageURI, server, function(r) {
-			// document.getElementById('camera_status').innerHTML = "Upload successful: "+r.bytesSent+" bytes uploaded.";  
-			document.getElementById("imageurl").value = options.fileName;
-			$$('form.ajax-submit').trigger('submit');
-			myApp.hidePreloader();
-			// myApp.alert('Новость отправлена!<br />Благодарим Вас!<br />filename: '+options.fileName, r.bytesSent);
-			// myApp.alert(options.fileName+'Сообщение отправлено!<br />Благодарим Вас!', r.bytesSent);
-			myApp.alert('Сообщение отправлено.<br />Благодарим Вас,<br />пишите ещё!','Спасибо');
-			document.getElementById("imageurl").value = null;
-          	
-		}, function(error) {
-			// document.getElementById('camera_status').innerHTML = "Upload failed: Code = "+error.code;            	
-			myApp.hidePreloader();
-			myApp.alert('Произошла неизвестная ошибка. Пожалуйста, попробуйте снова.<br />'+error.code);
-		}, options);
-	}
-}
 
-/**
- * View pictures uploaded to the server
- */
-function viewUploadedPictures() {
-	
-	// Get server URL
-	server = document.getElementById('serverUrl').value;
-	if (server) {
-		
-		// Get HTML that lists all pictures on server using XHR	
-		var xmlhttp = new XMLHttpRequest();
+	// ajax form submit error processing
+	$$('form.ajax-submit').on('submitted', function (e) {
+	 myApp.alert('Спасибо! Ваша заявка уже обрабатывается операторами.');
+	 // mainView.router.loadPage("thanks.html"); // redirect to Thanks page
+	 mainView.router.back({url: 'index.html', force: true});
+	 // console.log(e.detail.data);
+	});
+			
+	$$('form.ajax-submit').on('submitError', function (e) {
+	 myApp.alert('Ошибка отправки формы. Сообщите, пожалуйста, нажав иконку телефона на главной странице. Спасибо.');
+	 mainView.router.back({url: 'index.html', force: true});
+	 // console.log(e.detail.data);
+	});
 
-		// Callback function when XMLHttpRequest is ready
-		xmlhttp.onreadystatechange=function(){
-			if(xmlhttp.readyState === 4){
-
-				// HTML is returned, which has pictures to display
-				if (xmlhttp.status === 200) {
-					document.getElementById('server_images').innerHTML = xmlhttp.responseText;
-				}
-
-				// If error
-				else {
-					document.getElementById('server_images').innerHTML = "Error retrieving pictures from server.";
-				}
+	//confirm dialog on buyform page
+	$$('.confirm-title-ok-cancel').on('click', function () {
+		var idName = document.getElementById('name').value;
+		var idTel = document.getElementById('tel').value;
+		myApp.confirm(idTel, idName + ',<br />Вы правильно ввели телефон?', 
+			function () {
+				$$('form.ajax-submit').trigger('submit'); // form sends via old button, but ajax timeout problem!!!
+			},
+			function () {
+				// myApp.alert('Введите правильный номер телефона, пожалуйста.');
 			}
-		};
-		xmlhttp.open("GET", server , true);
-		xmlhttp.send();       	
-	}	
-}
+		);
+	});   	
+	
+});
 
-/**
- * Pushwoosh
- */
-function initPushwoosh()
-{
-    var pushNotification = cordova.require("com.pushwoosh.plugins.pushwoosh.PushNotification");
- 
-    //set push notifications handler
-    document.addEventListener('push-notification', function(event) {
-        var title = event.notification.title;
-        var userData = event.notification.userdata;
-                                 
-        if(typeof(userData) != "undefined") {
-            console.warn('user data: ' + JSON.stringify(userData));
-        }
-                                     
-        myApp.alert(title);
-    });
- 
-    //initialize Pushwoosh with projectid: "GOOGLE_PROJECT_ID", pw_appid : "PUSHWOOSH_APP_ID". This will trigger all pending push notifications on start.
-    pushNotification.onDeviceReady({ projectid: "856146586583", pw_appid : "6CFA4-45F6E" });
- 
-    //register for pushes
-    pushNotification.registerDevice(
-        function(status) {
-            var pushToken = status;
-            console.warn('push token: ' + pushToken);
-        },
-        function(status) {
-            console.warn(JSON.stringify(['failed to register ', status]));
-        }
-    );
-}
+
