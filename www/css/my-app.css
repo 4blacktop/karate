@@ -149,7 +149,11 @@ i.icon.icon-comment-black {
  	background-image: url("../img/ic_comment_black_24px.svg"); 
 }
 
-
+i.icon.icon-karate {
+  width: 24px;
+  height: 24px;
+ 	background-image: url("../img/karate.png"); 
+}
 
 /* list block - list of posts on every tab with pictures */
 
@@ -180,8 +184,3 @@ i.icon.icon-comment-black {
 
 
 
-i.icon.icon-karate {
-  width: 24px;
-  height: 24px;
- 	background-image: url("../img/karate.png"); 
-}
