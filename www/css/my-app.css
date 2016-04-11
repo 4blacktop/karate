@@ -151,11 +151,6 @@ i.icon.icon-comment-black {
 
 
 
-
-
-
-
-
 /* list block - list of posts on every tab with pictures */
 
 
@@ -181,4 +176,12 @@ i.icon.icon-comment-black {
   white-space: nowrap;
   max-width: 100%;
   text-overflow: ellipsis;
+}
+
+
+
+i.icon.icon-karate {
+  width: 24px;
+  height: 24px;
+ 	background-image: url("../img/karate.png"); 
 }
